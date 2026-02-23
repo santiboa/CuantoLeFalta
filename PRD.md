@@ -64,7 +64,7 @@ Not from insults or commentary.
 ## 🎭 Acceptable Provocative Variations
 
 Occasionally, the bot may use minimal, sharpened formats such as:
-Key milestones and round numbers:
+**Key milestones and round numbers:**
 - "Ya paso XX.000% del sexenio."
 - "Faltan exactamente 2 años y 6 meses"
 - “Faltan 1000 días.”
@@ -72,13 +72,19 @@ Key milestones and round numbers:
 - “Ya son menos de 365 días.”
 - “Últimos 100 días.”
 
----
-
-## 🚫 What We want to explore eventually
-
-- Commentary about policies
-- Editorialization
-- Reactions to key news
+**Visual representations for tweets:**
+- "✅✅✅✅✅✅✅✅🔲🔲" --> insted of 80% of the way there
+- """
+✅✅✅✅✅✅✅✅✅✅
+🔲🔲🔲🔲🔲🔲🔲🔲🔲🔲
+🔲🔲🔲🔲🔲🔲🔲🔲🔲🔲
+🔲🔲🔲🔲🔲🔲🔲🔲🔲🔲
+🔲🔲🔲🔲🔲🔲🔲🔲🔲🔲
+🔲🔲🔲🔲🔲🔲🔲🔲🔲🔲
+🔲🔲🔲🔲🔲🔲🔲🔲🔲🔲
+🔲🔲🔲🔲🔲🔲🔲🔲🔲🔲
+🔲🔲🔲🔲🔲🔲🔲🔲🔲🔲
+🔲🔲🔲🔲🔲🔲🔲🔲🔲🔲""" - for 10% of the weay there
 
 ---
 
@@ -150,28 +156,7 @@ We protect that.
 These are ideas. Not current roadmap.
 
 ---
-
-## 🌐 A. Lightweight Website Companion
-
-Purpose:
-- Display live countdown.
-- Embed latest tweet.
-- Act as a central hub.
-
-Possible Features:
-- Real-time countdown clock.
-- Embedded tweet.
-- Tweet intent button.
-- Optional donation button.
-- Very minimal design.
-
-Hosting options:
-- Flask app on PythonAnywhere
-- Static site
-
----
-
-## 🧠 B. Structured Milestone System
+## 🧠 A. Structured Milestone System
 
 Instead of reacting to daily news, we can predefine:
 
@@ -193,6 +178,26 @@ These become controlled “intensity spikes.”
 No improvisation.
 No reactive tweeting.
 All predefined.
+
+---
+
+## 🌐 B. Lightweight Website Companion
+
+Purpose:
+- Display live countdown.
+- Embed latest tweet.
+- Act as a central hub.
+
+Possible Features:
+- Real-time countdown clock.
+- Embedded tweet.
+- Tweet intent button.
+- Optional donation button.
+- Very minimal design.
+
+Hosting options:
+- Flask app on PythonAnywhere
+- Static site
 
 ---
 
@@ -224,11 +229,7 @@ Only useful if scale increases significantly.
 
 # 7️⃣ Product Philosophy
 
-This is not commentary.
-This is not debate.
-This is not activism.
-
-It is a clock.
+It is a clock and reverse countdown timer.
 
 But a clock, when placed in the right context, becomes powerful.
 
