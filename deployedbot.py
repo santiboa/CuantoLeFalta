@@ -9,6 +9,9 @@ import pytz
 from calendar import monthrange
 from milestones import MilestoneChecker
 
+# Global DRY_RUN flag - set to True to log tweets instead of posting to API
+DRY_RUN = True
+
 #Important Keys (Make sure to secure your keys if this is production)
 consumer_key = os.getenv('CONSUMER_KEY')
 consumer_secret = os.getenv('CONSUMER_SECRET')
@@ -94,14 +97,17 @@ periodicalTime = nextTweetCalc()
 
 #Sample DEBUG:
 tweet = remainingTime()
-client.create_tweet(text=tweet)
+if DRY_RUN:
+    print(f'[DRY RUN] TWEET: {tweet}')
+else:
+    client.create_tweet(text=tweet)
 print(f'Sample tweet right now at start of this:{tweet}')
 
 # Initialize next tweet time
 nextTweetTime = datetime.datetime.now(timezone) + timedelta(seconds=nextTweetCalc())
 
 # Initialize milestone checker
-milestone_checker = MilestoneChecker(client, start, end, timezone)
+milestone_checker = MilestoneChecker(client, start, end, timezone, dry_run=DRY_RUN)
 
 while True:
     time.sleep(60)  # Wait 1 minute
@@ -117,14 +123,21 @@ while True:
     if now >= nextTweetTime:
         tweet = remainingTime()
         if tweet == "Ya acabó.":
-            # client.create_tweet(text=tweet)
-            print("TWEET INCOMING (of the end though!)")
+            if DRY_RUN:
+                print("[DRY RUN] TWEET INCOMING (of the end though!)")
+            else:
+                # client.create_tweet(text=tweet)
+                print("TWEET INCOMING (of the end though!)")
             print(tweet)
             # break  # Stop the loop when countdown is over
         else:
-            client.create_tweet(text=tweet)
-            print("TWEET INCOMING!")
-            print(tweet)
+            if DRY_RUN:
+                print("[DRY RUN] TWEET INCOMING!")
+                print(f'[DRY RUN] TWEET: {tweet}')
+            else:
+                client.create_tweet(text=tweet)
+                print("TWEET INCOMING!")
+                print(tweet)
 
         # Calculate the next tweet time after sending the current one
         periodicalTime = nextTweetCalc()

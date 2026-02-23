@@ -5,9 +5,6 @@ import os
 from typing import Dict, List, Optional, Tuple
 
 
-# Dry-run mode flag - set to True to test without posting
-DRY_RUN = False
-
 # Cooldown period in seconds (5 minutes)
 COOLDOWN_SECONDS = 5 * 60
 
@@ -18,11 +15,12 @@ PERSISTENCE_FILE = "milestones_tweeted.json"
 class MilestoneChecker:
     """Detects and tweets milestone moments."""
     
-    def __init__(self, client, start: datetime.datetime, end: datetime.datetime, timezone):
+    def __init__(self, client, start: datetime.datetime, end: datetime.datetime, timezone, dry_run=False):
         self.client = client
         self.start = start
         self.end = end
         self.timezone = timezone
+        self.dry_run = dry_run
         
         # Previous check values (for crossing detection)
         self.prev_remaining_seconds: Optional[float] = None
@@ -416,7 +414,9 @@ class MilestoneChecker:
                 print(f"[TWEET] {tweet_text}")
                 
                 # Tweet (unless dry-run)
-                if not DRY_RUN:
+                if self.dry_run:
+                    print(f"[DRY RUN] TWEET: {tweet_text}")
+                else:
                     try:
                         self.client.create_tweet(text=tweet_text)
                         print(f"[SUCCESS] Tweeted milestone: {milestone_type} = {threshold_value}")

@@ -1,0 +1,54 @@
+{
+  "tweeted": [
+    {
+      "unit": "days_remaining",
+      "value": 2000,
+      "tweeted_at": "2026-02-22T19:07:23.291349-06:00"
+    },
+    {
+      "unit": "seconds_remaining",
+      "value": 150000000,
+      "tweeted_at": "2026-02-22T19:07:23.291621-06:00"
+    },
+    {
+      "unit": "days_elapsed",
+      "value": 100,
+      "tweeted_at": "2026-02-22T19:07:23.291783-06:00"
+    },
+    {
+      "unit": "days_elapsed",
+      "value": 200,
+      "tweeted_at": "2026-02-22T19:07:23.291895-06:00"
+    },
+    {
+      "unit": "days_elapsed",
+      "value": 365,
+      "tweeted_at": "2026-02-22T19:07:23.292005-06:00"
+    },
+    {
+      "unit": "days_elapsed",
+      "value": 500,
+      "tweeted_at": "2026-02-22T19:07:23.292114-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 5,
+      "tweeted_at": "2026-02-22T19:07:23.292235-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 10,
+      "tweeted_at": "2026-02-22T19:07:23.292351-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 15,
+      "tweeted_at": "2026-02-22T19:07:23.292480-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 20,
+      "tweeted_at": "2026-02-22T19:07:23.292702-06:00"
+    }
+  ]
+}
