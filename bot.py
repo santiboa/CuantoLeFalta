@@ -1,5 +1,6 @@
+# DEPRECATED: Use deployedbot.py instead
 #!/usr/local/python3.7
-# Replies to mentions, AMLO's latest tweets, and posts periodically
+# Replies to mentions, AMLO's latest tweets, and posts periodically 
 # Import Tweety and date / times
 import tweepy
 import datetime

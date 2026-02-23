@@ -7,6 +7,7 @@ import time
 from random import random
 import pytz
 from calendar import monthrange
+from milestones import MilestoneChecker
 
 #Important Keys (Make sure to secure your keys if this is production)
 consumer_key = os.getenv('CONSUMER_KEY')
@@ -99,11 +100,18 @@ print(f'Sample tweet right now at start of this:{tweet}')
 # Initialize next tweet time
 nextTweetTime = datetime.datetime.now(timezone) + timedelta(seconds=nextTweetCalc())
 
+# Initialize milestone checker
+milestone_checker = MilestoneChecker(client, start, end, timezone)
+
 while True:
     time.sleep(60)  # Wait 1 minute
 
     # Check if the current time is after the next tweet time
     now = datetime.datetime.now(timezone)
+    
+    # Check milestones first (immediate posting if detected)
+    milestone_checker.check_and_tweet(now)
+    
     # For DEBUG:
     # print(f'Time right now: {now}')
     if now >= nextTweetTime:
