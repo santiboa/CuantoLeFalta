@@ -5,6 +5,9 @@ import os
 from typing import Dict, List, Optional, Tuple
 
 
+# Dry-run mode flag - set to True to test without posting
+DRY_RUN = False
+
 # Cooldown period in seconds (5 minutes)
 COOLDOWN_SECONDS = 5 * 60
 
@@ -15,7 +18,7 @@ PERSISTENCE_FILE = "milestones_tweeted.json"
 class MilestoneChecker:
     """Detects and tweets milestone moments."""
     
-    def __init__(self, client, start: datetime.datetime, end: datetime.datetime, timezone, dry_run=False):
+    def __init__(self, client, start: datetime.datetime, end: datetime.datetime, timezone, dry_run=DRY_RUN):
         self.client = client
         self.start = start
         self.end = end
@@ -184,8 +187,6 @@ class MilestoneChecker:
             return f"Ya van {self._format_number(value)} dias."
         
         elif milestone_type == 'percentage':
-            pct_str = self._format_percentage(value)
-            
             # Special fraction cases
             if abs(value - 33.333) < 0.1:
                 return f"Ya paso un tercio del sexenio.\n✅🔲🔲"
@@ -198,7 +199,7 @@ class MilestoneChecker:
             if value == 50:
                 base = "Ya paso la mitad del sexenio."
             else:
-                base = f"Ya paso {pct_str}% del sexenio."
+                base = f"Ya paso {int(value)}% del sexenio."
             
             if is_major:
                 # 10x10 grid for major milestones

@@ -49,6 +49,161 @@
       "unit": "percentage",
       "value": 20,
       "tweeted_at": "2026-02-22T19:07:23.292702-06:00"
+    },
+    {
+      "unit": "days_elapsed",
+      "value": 1000,
+      "tweeted_at": "2026-02-22T19:19:14.854764-06:00"
+    },
+    {
+      "unit": "seconds_remaining",
+      "value": 66666666,
+      "tweeted_at": "2026-02-22T19:19:14.863301-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 10,
+      "tweeted_at": "2026-02-22T19:19:14.864135-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 9,
+      "tweeted_at": "2026-02-22T19:19:14.864662-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 8,
+      "tweeted_at": "2026-02-22T19:19:14.864906-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 7,
+      "tweeted_at": "2026-02-22T19:19:14.865095-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 6,
+      "tweeted_at": "2026-02-22T19:19:14.865281-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 5,
+      "tweeted_at": "2026-02-22T19:19:14.865474-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 4,
+      "tweeted_at": "2026-02-22T19:19:14.865664-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 3,
+      "tweeted_at": "2026-02-22T19:19:14.865849-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 2,
+      "tweeted_at": "2026-02-22T19:19:14.866037-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 1,
+      "tweeted_at": "2026-02-22T19:19:14.866234-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 40,
+      "tweeted_at": "2026-02-22T19:19:14.867809-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 45,
+      "tweeted_at": "2026-02-22T19:19:14.868645-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 50,
+      "tweeted_at": "2026-02-22T19:19:14.869116-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 38,
+      "tweeted_at": "2026-02-22T19:19:14.870489-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 1000,
+      "tweeted_at": "2026-02-22T19:20:28.216041-06:00"
+    },
+    {
+      "unit": "minutes_remaining",
+      "value": 10000,
+      "tweeted_at": "2026-02-22T19:20:28.219447-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 39,
+      "tweeted_at": "2026-02-22T19:20:28.241240-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 41,
+      "tweeted_at": "2026-02-22T19:20:28.242272-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 42,
+      "tweeted_at": "2026-02-22T19:20:28.242617-06:00"
+    },
+    {
+      "unit": "approaching_days_remaining",
+      "value": 1000,
+      "tweeted_at": "2026-02-22T19:20:28.243624-06:00"
+    },
+    {
+      "unit": "hours_remaining",
+      "value": 100,
+      "tweeted_at": "2026-02-22T19:21:58.388280-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 43,
+      "tweeted_at": "2026-02-22T19:21:58.395473-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 44,
+      "tweeted_at": "2026-02-22T19:21:58.396858-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 46,
+      "tweeted_at": "2026-02-22T19:21:58.397312-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 1000,
+      "tweeted_at": "2026-02-22T19:22:10.807406-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 47,
+      "tweeted_at": "2026-02-22T19:22:10.813292-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 48,
+      "tweeted_at": "2026-02-22T19:22:10.814906-06:00"
+    },
+    {
+      "unit": "percentage",
+      "value": 49,
+      "tweeted_at": "2026-02-22T19:22:10.815839-06:00"
+    },
+    {
+      "unit": "approaching_days_remaining",
+      "value": 1000,
+      "tweeted_at": "2026-02-22T19:22:10.816898-06:00"
     }
   ]
 }

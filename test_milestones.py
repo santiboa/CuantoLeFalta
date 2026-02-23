@@ -63,9 +63,11 @@ class TestCrossingDetection:
         """Test crossing detection for remaining (countdown) milestones."""
         checker = MilestoneChecker(MockClient(), start, end, timezone)
         
-        # Cross from above to at/below threshold
+        # Cross from strictly above to at/below threshold
         assert checker._crossed_threshold(1001, 1000, 1000, 'remaining') == True
-        assert checker._crossed_threshold(1000, 999, 1000, 'remaining') == True
+        assert checker._crossed_threshold(1001, 999, 1000, 'remaining') == True
+        # prev == threshold means we were already at it, not crossing
+        assert checker._crossed_threshold(1000, 999, 1000, 'remaining') == False
         assert checker._crossed_threshold(1002, 1001, 1000, 'remaining') == False  # Still above
         assert checker._crossed_threshold(999, 998, 1000, 'remaining') == False  # Already below
         assert checker._crossed_threshold(None, 1000, 1000, 'remaining') == False  # First run
@@ -74,9 +76,11 @@ class TestCrossingDetection:
         """Test crossing detection for elapsed (count-up) milestones."""
         checker = MilestoneChecker(MockClient(), start, end, timezone)
         
-        # Cross from below to at/above threshold
+        # Cross from strictly below to at/above threshold
         assert checker._crossed_threshold(999, 1000, 1000, 'elapsed') == True
-        assert checker._crossed_threshold(1000, 1001, 1000, 'elapsed') == True
+        assert checker._crossed_threshold(999, 1001, 1000, 'elapsed') == True
+        # prev == threshold means we were already at it, not crossing
+        assert checker._crossed_threshold(1000, 1001, 1000, 'elapsed') == False
         assert checker._crossed_threshold(998, 999, 1000, 'elapsed') == False  # Still below
         assert checker._crossed_threshold(1001, 1002, 1000, 'elapsed') == False  # Already above
         assert checker._crossed_threshold(None, 1000, 1000, 'elapsed') == False  # First run
@@ -124,7 +128,7 @@ class TestTweetFormatting:
         
         # Regular percentage (not multiple of 5)
         tweet = checker._format_tweet('percentage', 37, 0, 0, 37)
-        assert "Ya paso 37.000% del sexenio" in tweet
+        assert "Ya paso 37% del sexenio" in tweet
         assert "🟩" in tweet  # Should have progress bar
         assert "⬜" in tweet
         
@@ -233,16 +237,19 @@ class TestTimeSimulation:
         client = MockClient()
         checker = MilestoneChecker(client, start, end, timezone)
         
-        # Set up: 1001 days remaining
-        now_1001 = fake_now(2027, 1, 1, 12, 0, 0)
-        # Manually set previous value to simulate crossing
-        checker.prev_remaining_seconds = 1001 * 86400
+        # Ensure 1000 days milestone isn't already tweeted
+        if ('days_remaining', 1000) in checker.tweeted_milestones:
+            checker.tweeted_milestones.remove(('days_remaining', 1000))
         
-        # Now: 1000 days remaining (crossed threshold)
-        now_1000 = fake_now(2027, 1, 2, 12, 0, 0)
-        checker.check_and_tweet(now_1000)
+        # Set prev to just above the threshold (in remaining seconds)
+        checker.prev_remaining_seconds = 1001 * 86400 + 1000  # Slightly above
         
-        # Should have tweeted
+        # Use a time where actual remaining is just below 1000 days
+        # Calculate exact time: 1000 days = 86,400,000 seconds
+        now = end - datetime.timedelta(seconds=1000 * 86400 - 1)  # Just below threshold
+        checker.check_and_tweet(now)
+        
+        # Should have tweeted about 1000 days remaining
         assert len(client.tweets) > 0
         assert any("Faltan 1,000 dias" in tweet for tweet in client.tweets)
     
@@ -312,17 +319,29 @@ class TestTimeSimulation:
         client = MockClient()
         checker = MilestoneChecker(client, start, end, timezone)
         
+        # Mark other milestones as already tweeted to avoid conflicts
+        # (hours, minutes, seconds milestones that might cross at same time)
+        for h in [100, 48, 24, 12]:
+            checker.tweeted_milestones.add(('hours_remaining', h))
+        for m in [10000, 1000]:
+            checker.tweeted_milestones.add(('minutes_remaining', m))
+        for s in [9000000, 8000000, 7000000, 6000000, 5000000, 4000000, 3000000, 2000000, 1000000]:
+            checker.tweeted_milestones.add(('seconds_remaining', s))
+        
         # Simulate days 10, 9, 8... 1
         for day in range(10, 0, -1):
             remaining_seconds = day * 86400
             now = end - datetime.timedelta(seconds=remaining_seconds)
             
-            # Set previous to day+1
-            checker.prev_remaining_seconds = (day + 1) * 86400
+            # Set previous to day+1 (slightly above to ensure crossing)
+            checker.prev_remaining_seconds = (day + 1) * 86400 + 1000
+            
+            # Clear cooldown between iterations (they're days apart)
+            checker.last_milestone_tweet_time = None
             
             checker.check_and_tweet(now)
             
-            # Verify tweet format
+            # Verify tweet format - check that we got a days tweet
             if len(client.tweets) > 0:
                 last_tweet = client.tweets[-1]
                 if day == 1:
@@ -383,17 +402,22 @@ class TestApproachingTweets:
         client = MockClient()
         checker = MilestoneChecker(client, start, end, timezone)
         
-        # Set previous to just above approaching threshold (1000 days + 1 day = 1001 days)
-        checker.prev_remaining_seconds = (1001 + 1) * 86400
+        # Ensure approaching milestone isn't already tweeted
+        if ('approaching_days_remaining', 1000) in checker.tweeted_milestones:
+            checker.tweeted_milestones.remove(('approaching_days_remaining', 1000))
         
-        # Now cross approaching threshold (1000 days + 1 day)
-        checker.prev_remaining_seconds = (1000 + 1) * 86400
-        now = fake_now(2027, 1, 1, 12, 0, 0)
+        # Approaching threshold for 1000 days = (1000 + 1) * 86400 = 86,486,400 seconds
+        # Set prev to just above: 1002 days remaining = 86,572,800 seconds
+        checker.prev_remaining_seconds = 1002 * 86400 + 1000
+        
+        # Use a time where remaining is just below 1001 days (approaching threshold)
+        # 1001 days = 86,486,400 seconds
+        now = end - datetime.timedelta(seconds=1001 * 86400 - 1)  # Just below threshold
         checker.check_and_tweet(now)
         
         # Should have approaching tweet
-        if len(client.tweets) > 0:
-            assert any("Manana faltan" in tweet for tweet in client.tweets)
+        assert len(client.tweets) > 0
+        assert any("Manana faltan" in tweet for tweet in client.tweets)
 
 
 class TestAlreadyPassed:
@@ -413,7 +437,7 @@ class TestAlreadyPassed:
         checker.check_and_tweet(now)
         
         # Should not have tweeted for 20%
-        assert not any("20.000%" in tweet for tweet in client.tweets)
+        assert not any("20%" in tweet for tweet in client.tweets)
 
 
 if __name__ == '__main__':
