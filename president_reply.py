@@ -26,6 +26,10 @@ DRY_RUN = True
 MAX_RETRIES = 4
 BASE_DELAY_SECONDS = 6.0
 
+# Startup jitter: wait 27–373 seconds before running (skipped in DRY_RUN)
+STARTUP_DELAY_MIN = 27
+STARTUP_DELAY_MAX = 373
+
 # Credentials (match deployedbot - consider moving to env vars)
 CONSUMER_KEY = os.environ.get("TWITTER_CONSUMER_KEY", "fNP3wN6zG2W4PiGETsaFU7Bwi")
 CONSUMER_SECRET = os.environ.get("TWITTER_CONSUMER_SECRET", "Tz1HjLXiXdb5Gn9uP2IXocrbLut4fHCOF5EhR1vUOvnHOzvP8F")
@@ -145,6 +149,11 @@ def main() -> None:
     """Main entry: get latest tweet, reply if new, cache ID."""
     now = datetime.datetime.now(timezone)
     print(f"[{now.isoformat()}] President reply job started (DRY_RUN={DRY_RUN})")
+
+    if not DRY_RUN:
+        delay = random.uniform(STARTUP_DELAY_MIN, STARTUP_DELAY_MAX)
+        print(f"[JITTER] Waiting {delay:.1f}s before running...")
+        time.sleep(delay)
 
     latest_id = get_latest_tweet_id()
     if not latest_id:
