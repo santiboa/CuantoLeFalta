@@ -15,9 +15,14 @@ start = timezone.localize(
 )
 
 
-def remaining_time() -> str:
-    """Calculate and format the remaining time until end of sexenio."""
-    now = datetime.datetime.now(timezone)
+def remaining_time(now=None) -> str:
+    """Calculate and format the remaining time until end of sexenio.
+    
+    Args:
+        now: Optional datetime (timezone-aware). If None, uses current time.
+    """
+    if now is None:
+        now = datetime.datetime.now(timezone)
     diff_time = end - now
 
     if diff_time.total_seconds() <= 0:

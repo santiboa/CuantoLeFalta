@@ -6,7 +6,7 @@ import tempfile
 import pytest
 import pytz
 from unittest.mock import Mock, MagicMock
-from milestones import MilestoneChecker, DRY_RUN, COOLDOWN_SECONDS, PERSISTENCE_FILE
+from milestones import MilestoneChecker, COOLDOWN_SECONDS, PERSISTENCE_FILE
 
 
 # Test timezone
@@ -418,6 +418,40 @@ class TestApproachingTweets:
         # Should have approaching tweet
         assert len(client.tweets) > 0
         assert any("Manana faltan" in tweet for tweet in client.tweets)
+
+
+class TestDryRun:
+    """Test that dry_run mode does not call the API."""
+    
+    def test_dry_run_no_api_call(self):
+        """When dry_run=True, create_tweet should not be called."""
+        client = MockClient()
+        checker = MilestoneChecker(client, start, end, timezone, dry_run=True)
+        
+        # Ensure 1000 days milestone isn't already tweeted
+        if ('days_remaining', 1000) in checker.tweeted_milestones:
+            checker.tweeted_milestones.remove(('days_remaining', 1000))
+        
+        checker.prev_remaining_seconds = 1001 * 86400 + 1000
+        now = end - datetime.timedelta(seconds=1000 * 86400 - 1)
+        checker.check_and_tweet(now)
+        
+        # No tweets should reach the mock client
+        assert len(client.tweets) == 0
+    
+    def test_dry_run_false_does_call_api(self):
+        """When dry_run=False, create_tweet should be called."""
+        client = MockClient()
+        checker = MilestoneChecker(client, start, end, timezone, dry_run=False)
+        
+        if ('days_remaining', 1000) in checker.tweeted_milestones:
+            checker.tweeted_milestones.remove(('days_remaining', 1000))
+        
+        checker.prev_remaining_seconds = 1001 * 86400 + 1000
+        now = end - datetime.timedelta(seconds=1000 * 86400 - 1)
+        checker.check_and_tweet(now)
+        
+        assert len(client.tweets) > 0
 
 
 class TestAlreadyPassed:
