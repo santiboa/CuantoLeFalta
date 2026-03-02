@@ -94,10 +94,11 @@ def get_latest_tweet_id() -> Optional[str]:
     Uses natural flow (land on x.com first) and anti-detection measures.
     """
     from playwright.sync_api import sync_playwright
-    from playwright_stealth import stealth_sync
+    from playwright_stealth import Stealth
 
     def _scrape():
-        with sync_playwright() as p:
+        stealth = Stealth(navigator_languages_override=("es-MX", "es"))
+        with stealth.use_sync(sync_playwright()) as p:
             # PythonAnywhere: set PLAYWRIGHT_CHROMIUM_PATH=/usr/bin/chromium
             executable = os.environ.get("PLAYWRIGHT_CHROMIUM_PATH")
             launch_kw: dict = {
@@ -116,7 +117,7 @@ def get_latest_tweet_id() -> Optional[str]:
             )
 
             page = context.new_page()
-            stealth_sync(page)
+            # Stealth is applied automatically to pages via use_sync
 
             # Natural flow: land on x.com first, then navigate to profile
             page.goto("https://x.com", wait_until="domcontentloaded", timeout=30000)

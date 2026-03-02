@@ -274,6 +274,31 @@
       "unit": "days_remaining",
       "value": 1000,
       "tweeted_at": "2026-03-01T18:51:47.846972-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 1000,
+      "tweeted_at": "2026-03-01T19:06:12.296052-06:00"
+    },
+    {
+      "unit": "approaching_percentage",
+      "value": 50,
+      "tweeted_at": "2026-03-01T19:06:12.302578-06:00"
+    },
+    {
+      "unit": "approaching_days_remaining",
+      "value": 1000,
+      "tweeted_at": "2026-03-01T19:06:12.305029-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 1000,
+      "tweeted_at": "2026-03-01T19:06:12.306490-06:00"
+    },
+    {
+      "unit": "days_remaining",
+      "value": 1000,
+      "tweeted_at": "2026-03-01T19:06:12.307901-06:00"
     }
   ]
 }
