@@ -1,0 +1,7 @@
+# Core bot
+tweepy>=4.0.0
+pytz>=2023.3
+
+# President reply scraper (run at 7:45 AM CDMX)
+playwright>=1.40.0
+playwright-stealth>=1.0.0
