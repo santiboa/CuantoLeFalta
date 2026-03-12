@@ -31,10 +31,10 @@ STARTUP_DELAY_MIN = 27
 STARTUP_DELAY_MAX = 373
 
 # Credentials (match deployedbot - consider moving to env vars)
-CONSUMER_KEY = os.environ.get("TWITTER_CONSUMER_KEY", "fNP3wN6zG2W4PiGETsaFU7Bwi")
-CONSUMER_SECRET = os.environ.get("TWITTER_CONSUMER_SECRET", "Tz1HjLXiXdb5Gn9uP2IXocrbLut4fHCOF5EhR1vUOvnHOzvP8F")
-ACCESS_TOKEN = os.environ.get("TWITTER_ACCESS_TOKEN", "1338193765656264704-FmIfbY97zBxyY0qaNxecI9MmCJUsUv")
-ACCESS_TOKEN_SECRET = os.environ.get("TWITTER_ACCESS_TOKEN_SECRET", "4UK79svSne8789YiXwwrXGnX2FaC2OeuEeZvIJxyrT3RY")
+CONSUMER_KEY = os.environ.get("CONSUMER_KEY")
+CONSUMER_SECRET = os.environ.get("CONSUMER_SECRET")
+ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
+ACCESS_TOKEN_SECRET = os.environ.get("ACCESS_TOKEN_SECRET")
 
 # Realistic user agent (Chrome on Windows, updated periodically)
 USER_AGENT = (
