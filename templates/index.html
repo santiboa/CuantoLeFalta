@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuánto Le Falta</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a0a;
+            color: #f0f0f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .countdown-days {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .countdown-days span {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: #888;
+        }
+
+        .countdown-detail {
+            font-size: 1.1rem;
+            color: #aaa;
+            margin-bottom: 0.5rem;
+        }
+
+        .countdown-hms {
+            font-size: 0.95rem;
+            color: #666;
+            font-family: monospace;
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #1a1a1a;
+            border-radius: 3px;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #f0f0f0;
+            border-radius: 3px;
+            transition: width 1s linear;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            color: #555;
+            margin-bottom: 3rem;
+        }
+
+        .tweet-embed {
+            margin: 0 auto 2.5rem;
+            max-width: 500px;
+        }
+
+        .follow-link {
+            display: inline-block;
+            padding: 0.7rem 2rem;
+            border: 1px solid #333;
+            color: #ccc;
+            text-decoration: none;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            transition: all 0.2s ease;
+        }
+
+        .follow-link:hover {
+            border-color: #f0f0f0;
+            color: #fff;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            font-size: 0.75rem;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cuánto Le Falta</h1>
+
+        <div class="countdown-days" id="days">--</div>
+        <div class="countdown-days"><span>días</span></div>
+
+        <div class="countdown-detail" id="detail"></div>
+        <div class="countdown-hms" id="hms"></div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+        <div class="progress-text" id="progress-text"></div>
+
+        <div class="tweet-embed">
+            <a class="twitter-timeline"
+               href="https://x.com/{{ x_handle }}"
+               data-theme="dark"
+               data-chrome="noheader nofooter noborders transparent"
+               data-tweet-limit="1"
+               data-width="500">
+            </a>
+            <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+        </div>
+
+        <a class="follow-link" href="https://x.com/{{ x_handle }}" target="_blank" rel="noopener">
+            Seguir @{{ x_handle }}
+        </a>
+
+        <div class="footer">Un reloj. Nada más.</div>
+    </div>
+
+    <script>
+        const END = new Date("{{ end_iso }}");
+        const START = new Date("{{ start_iso }}");
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        function update() {
+            const now = new Date();
+            const diff = END - now;
+
+            if (diff <= 0) {
+                document.getElementById('days').textContent = '0';
+                document.getElementById('detail').textContent = 'Ya acabó.';
+                document.getElementById('hms').textContent = '';
+                document.getElementById('progress').style.width = '100%';
+                document.getElementById('progress-text').textContent = '100.000% del sexenio';
+                return;
+            }
+
+            const totalSec = Math.floor(diff / 1000);
+            const totalDays = Math.floor(totalSec / 86400);
+            const hours = Math.floor((totalSec % 86400) / 3600);
+            const minutes = Math.floor((totalSec % 3600) / 60);
+            const seconds = totalSec % 60;
+
+            // Approximate years, months, days
+            let y = END.getFullYear() - now.getFullYear();
+            let m = END.getMonth() - now.getMonth();
+            let d = END.getDate() - now.getDate();
+            if (d < 0) {
+                m -= 1;
+                const prevMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                d += prevMonth.getDate();
+            }
+            if (m < 0) {
+                y -= 1;
+                m += 12;
+            }
+
+            const yt = y === 1 ? 'año' : 'años';
+            const mt = m === 1 ? 'mes' : 'meses';
+            const dt = d === 1 ? 'día' : 'días';
+
+            document.getElementById('days').textContent = totalDays.toLocaleString('es-MX');
+            document.getElementById('detail').textContent =
+                `${y} ${yt}, ${m} ${mt}, ${d} ${dt}`;
+            document.getElementById('hms').textContent =
+                `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+
+            // Progress
+            const totalSpan = END - START;
+            const elapsed = now - START;
+            const pct = (elapsed / totalSpan) * 100;
+            document.getElementById('progress').style.width = pct.toFixed(3) + '%';
+            document.getElementById('progress-text').textContent =
+                pct.toFixed(3) + '% del sexenio';
+        }
+
+        update();
+        setInterval(update, 1000);
+    </script>
+</body>
+</html>
