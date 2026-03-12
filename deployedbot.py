@@ -1,8 +1,10 @@
 """Bot que postea regularmente cuanto le falta a Claudia Sheinbaum"""
 # Import required libraries
 import datetime
+import json
 import time
 from datetime import timedelta
+from pathlib import Path
 from random import random
 
 import tweepy
@@ -10,6 +12,19 @@ import tweepy
 from countdown import end, remaining_time, start, timezone
 from milestones import MilestoneChecker
 import os
+
+LATEST_TWEET_FILE = Path(__file__).parent / "latest_tweet.json"
+
+
+def save_latest_tweet(tweet_id: str, tweet_text: str) -> None:
+    """Save the latest posted tweet ID and text for the webapp to display."""
+    data = {
+        "tweet_id": str(tweet_id),
+        "tweet_text": tweet_text,
+        "posted_at": datetime.datetime.now(timezone).isoformat(),
+    }
+    with open(LATEST_TWEET_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
 # Global DRY_RUN flag - set to True to log tweets instead of posting to API
 DRY_RUN = True
@@ -61,7 +76,8 @@ if DRY_RUN:
         f.write(json.dumps({"sessionId":"bab3a6","runId":"initial","hypothesisId":"B","location":"deployedbot.py:48","message":"DRY_RUN branch taken","data":{"branch":"dry_run"},"timestamp":int(__import__('time').time()*1000)}) + '\n')
     # #endregion
 else:
-    client.create_tweet(text=tweet)
+    response = client.create_tweet(text=tweet)
+    save_latest_tweet(response.data["id"], tweet)
     # #region agent log
     import json
     with open('/Users/santiagopadilla/Documents/CuantoLeFalta/.cursor/debug-bab3a6.log', 'a') as f:
@@ -111,7 +127,8 @@ while True:
                 print("[DRY RUN] TWEET INCOMING!")
                 print(f'[DRY RUN] TWEET: {tweet}')
             else:
-                client.create_tweet(text=tweet)
+                response = client.create_tweet(text=tweet)
+                save_latest_tweet(response.data["id"], tweet)
                 print("TWEET INCOMING!")
                 print(tweet)
 

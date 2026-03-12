@@ -126,6 +126,11 @@
         <div class="progress-text" id="progress-text"></div>
 
         <div class="tweet-embed">
+            {% if tweet_id %}
+            <blockquote class="twitter-tweet" data-theme="dark" data-align="center">
+                <a href="https://x.com/{{ x_handle }}/status/{{ tweet_id }}"></a>
+            </blockquote>
+            {% else %}
             <a class="twitter-timeline"
                href="https://x.com/{{ x_handle }}"
                data-theme="dark"
@@ -133,6 +138,7 @@
                data-tweet-limit="1"
                data-width="500">
             </a>
+            {% endif %}
             <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
         </div>
 

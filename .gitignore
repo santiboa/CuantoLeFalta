@@ -9,5 +9,6 @@ __pycache__/
 venv/
 env/
 
-# Bot state (contains replied tweet IDs)
+# Bot state (contains replied tweet IDs and latest tweet cache)
 last_replied_id.json
+latest_tweet.json
