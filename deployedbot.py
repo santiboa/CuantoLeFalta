@@ -11,9 +11,30 @@ import tweepy
 
 from countdown import end, remaining_time, start, timezone
 from milestones import MilestoneChecker
+import president_reply
 import os
+import random as random_module
 
 LATEST_TWEET_FILE = Path(__file__).parent / "latest_tweet.json"
+
+# President reply: random time within a morning window each day
+REPLY_WINDOW_START_HOUR = 7   # 7:30 AM CDMX
+REPLY_WINDOW_START_MIN = 30
+REPLY_WINDOW_END_HOUR = 10    # 10:00 AM CDMX
+REPLY_WINDOW_END_MIN = 0
+
+
+def pick_reply_time_for_today() -> datetime.datetime:
+    """Pick a random time within today's reply window (CDMX timezone)."""
+    now = datetime.datetime.now(timezone)
+    window_start = now.replace(
+        hour=REPLY_WINDOW_START_HOUR, minute=REPLY_WINDOW_START_MIN, second=0, microsecond=0
+    )
+    window_end = now.replace(
+        hour=REPLY_WINDOW_END_HOUR, minute=REPLY_WINDOW_END_MIN, second=0, microsecond=0
+    )
+    random_offset = random_module.uniform(0, (window_end - window_start).total_seconds())
+    return window_start + timedelta(seconds=random_offset)
 
 
 def save_latest_tweet(tweet_id: str, tweet_text: str) -> None:
@@ -101,15 +122,45 @@ with open('/Users/santiagopadilla/Documents/CuantoLeFalta/.cursor/debug-bab3a6.l
     f.write(json.dumps({"sessionId":"bab3a6","runId":"initial","hypothesisId":"C","location":"deployedbot.py:60","message":"MilestoneChecker created","data":{"milestone_checker_dry_run":milestone_checker.dry_run},"timestamp":int(__import__('time').time()*1000)}) + '\n')
 # #endregion
 
+# President reply: pick today's random reply time
+reply_time_today = pick_reply_time_for_today()
+reply_done_today = False
+reply_last_date = None
+print(f"[REPLY] Today's president reply scheduled for {reply_time_today.strftime('%H:%M:%S')} CDMX")
+
 while True:
     time.sleep(60)  # Wait 1 minute
 
     # Check if the current time is after the next tweet time
     now = datetime.datetime.now(timezone)
-    
+
+    # Reset reply state at midnight for a new day
+    today = now.date()
+    if reply_last_date != today:
+        reply_done_today = False
+        reply_time_today = pick_reply_time_for_today()
+        reply_last_date = today
+        print(f"[REPLY] New day — president reply scheduled for {reply_time_today.strftime('%H:%M:%S')} CDMX")
+
+    # President reply: attempt at the randomly chosen time
+    # Reason: bot handles randomized timing, so we skip president_reply's internal jitter
+    if not reply_done_today and now >= reply_time_today:
+        try:
+            president_reply.DRY_RUN = DRY_RUN
+            original_jitter_min = president_reply.STARTUP_DELAY_MIN
+            original_jitter_max = president_reply.STARTUP_DELAY_MAX
+            president_reply.STARTUP_DELAY_MIN = 0
+            president_reply.STARTUP_DELAY_MAX = 0
+            president_reply.main()
+            president_reply.STARTUP_DELAY_MIN = original_jitter_min
+            president_reply.STARTUP_DELAY_MAX = original_jitter_max
+        except Exception as e:
+            print(f"[REPLY ERROR] {e}")
+        reply_done_today = True
+
     # Check milestones first (immediate posting if detected)
     milestone_checker.check_and_tweet(now)
-    
+
     # For DEBUG:
     # print(f'Time right now: {now}')
     if now >= nextTweetTime:
