@@ -17,24 +17,30 @@ import random as random_module
 
 LATEST_TWEET_FILE = Path(__file__).parent / "latest_tweet.json"
 
-# President reply: random time within a morning window each day
-REPLY_WINDOW_START_HOUR = 7   # 7:30 AM CDMX
-REPLY_WINDOW_START_MIN = 30
-REPLY_WINDOW_END_HOUR = 10    # 10:00 AM CDMX
-REPLY_WINDOW_END_MIN = 0
+# President reply: narrow window matching the president's morning tweet time
+REPLY_WINDOW_START = datetime.time(7, 39, 11)
+REPLY_WINDOW_END = datetime.time(7, 51, 48)
 
 
 def pick_reply_time_for_today() -> datetime.datetime:
     """Pick a random time within today's reply window (CDMX timezone)."""
     now = datetime.datetime.now(timezone)
     window_start = now.replace(
-        hour=REPLY_WINDOW_START_HOUR, minute=REPLY_WINDOW_START_MIN, second=0, microsecond=0
+        hour=REPLY_WINDOW_START.hour, minute=REPLY_WINDOW_START.minute,
+        second=REPLY_WINDOW_START.second, microsecond=0
     )
     window_end = now.replace(
-        hour=REPLY_WINDOW_END_HOUR, minute=REPLY_WINDOW_END_MIN, second=0, microsecond=0
+        hour=REPLY_WINDOW_END.hour, minute=REPLY_WINDOW_END.minute,
+        second=REPLY_WINDOW_END.second, microsecond=0
     )
     random_offset = random_module.uniform(0, (window_end - window_start).total_seconds())
     return window_start + timedelta(seconds=random_offset)
+
+
+def is_within_reply_window(now: datetime.datetime) -> bool:
+    """Check if current time is still within the reply window."""
+    current_time = now.time()
+    return REPLY_WINDOW_START <= current_time <= REPLY_WINDOW_END
 
 
 def save_latest_tweet(tweet_id: str, tweet_text: str) -> None:
@@ -142,21 +148,33 @@ while True:
         reply_last_date = today
         print(f"[REPLY] New day — president reply scheduled for {reply_time_today.strftime('%H:%M:%S')} CDMX")
 
-    # President reply: attempt at the randomly chosen time
-    # Reason: bot handles randomized timing, so we skip president_reply's internal jitter
+    # President reply: attempt at the randomly chosen time, retry each minute
+    # until window closes or we successfully reply.
+    # president_reply.main() scrapes X for the latest tweet, so each retry
+    # gives the president time to post their morning tweet.
     if not reply_done_today and now >= reply_time_today:
-        try:
-            president_reply.DRY_RUN = DRY_RUN
-            original_jitter_min = president_reply.STARTUP_DELAY_MIN
-            original_jitter_max = president_reply.STARTUP_DELAY_MAX
-            president_reply.STARTUP_DELAY_MIN = 0
-            president_reply.STARTUP_DELAY_MAX = 0
-            president_reply.main()
-            president_reply.STARTUP_DELAY_MIN = original_jitter_min
-            president_reply.STARTUP_DELAY_MAX = original_jitter_max
-        except Exception as e:
-            print(f"[REPLY ERROR] {e}")
-        reply_done_today = True
+        if is_within_reply_window(now):
+            cache_before = president_reply.load_last_replied_id()
+            try:
+                president_reply.DRY_RUN = DRY_RUN
+                original_jitter_min = president_reply.STARTUP_DELAY_MIN
+                original_jitter_max = president_reply.STARTUP_DELAY_MAX
+                president_reply.STARTUP_DELAY_MIN = 0
+                president_reply.STARTUP_DELAY_MAX = 0
+                president_reply.main()
+                president_reply.STARTUP_DELAY_MIN = original_jitter_min
+                president_reply.STARTUP_DELAY_MAX = original_jitter_max
+            except Exception as e:
+                print(f"[REPLY ERROR] {e}")
+            # If cache changed, we successfully replied
+            cache_after = president_reply.load_last_replied_id()
+            if cache_after != cache_before:
+                reply_done_today = True
+                print("[REPLY] Successfully replied, done for today")
+        else:
+            # Window has closed without a successful reply
+            reply_done_today = True
+            print("[REPLY] Window closed, skipping for today")
 
     # Check milestones first (immediate posting if detected)
     milestone_checker.check_and_tweet(now)
