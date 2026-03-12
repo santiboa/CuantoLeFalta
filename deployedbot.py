@@ -17,7 +17,7 @@ import random as random_module
 
 LATEST_TWEET_FILE = Path(__file__).parent / "latest_tweet.json"
 
-# President reply: narrow window matching the president's morning tweet time
+# President reply: window for picking a random first-attempt time
 REPLY_WINDOW_START = datetime.time(7, 39, 11)
 REPLY_WINDOW_END = datetime.time(7, 51, 48)
 
@@ -36,11 +36,6 @@ def pick_reply_time_for_today() -> datetime.datetime:
     random_offset = random_module.uniform(0, (window_end - window_start).total_seconds())
     return window_start + timedelta(seconds=random_offset)
 
-
-def is_within_reply_window(now: datetime.datetime) -> bool:
-    """Check if current time is still within the reply window."""
-    current_time = now.time()
-    return REPLY_WINDOW_START <= current_time <= REPLY_WINDOW_END
 
 
 def save_latest_tweet(tweet_id: str, tweet_text: str) -> None:
@@ -148,33 +143,39 @@ while True:
         reply_last_date = today
         print(f"[REPLY] New day — president reply scheduled for {reply_time_today.strftime('%H:%M:%S')} CDMX")
 
-    # President reply: attempt at the randomly chosen time, retry each minute
-    # until window closes or we successfully reply.
-    # president_reply.main() scrapes X for the latest tweet, so each retry
-    # gives the president time to post their morning tweet.
+    # President reply: try once at the random time, if no new tweet wait
+    # 4-6 minutes and try one last time, then done for the day.
     if not reply_done_today and now >= reply_time_today:
-        if is_within_reply_window(now):
-            cache_before = president_reply.load_last_replied_id()
-            try:
-                president_reply.DRY_RUN = DRY_RUN
-                original_jitter_min = president_reply.STARTUP_DELAY_MIN
-                original_jitter_max = president_reply.STARTUP_DELAY_MAX
-                president_reply.STARTUP_DELAY_MIN = 0
-                president_reply.STARTUP_DELAY_MAX = 0
-                president_reply.main()
-                president_reply.STARTUP_DELAY_MIN = original_jitter_min
-                president_reply.STARTUP_DELAY_MAX = original_jitter_max
-            except Exception as e:
-                print(f"[REPLY ERROR] {e}")
-            # If cache changed, we successfully replied
-            cache_after = president_reply.load_last_replied_id()
-            if cache_after != cache_before:
-                reply_done_today = True
-                print("[REPLY] Successfully replied, done for today")
+        president_reply.DRY_RUN = DRY_RUN
+        president_reply.STARTUP_DELAY_MIN = 0
+        president_reply.STARTUP_DELAY_MAX = 0
+        reply_done_today = True
+
+        cache_before = president_reply.load_last_replied_id()
+        try:
+            print("[REPLY] First attempt...")
+            president_reply.main()
+        except Exception as e:
+            print(f"[REPLY ERROR] First attempt: {e}")
+
+        cache_after = president_reply.load_last_replied_id()
+        if cache_after != cache_before:
+            print("[REPLY] Successfully replied on first attempt")
         else:
-            # Window has closed without a successful reply
-            reply_done_today = True
-            print("[REPLY] Window closed, skipping for today")
+            wait = random_module.uniform(4 * 60, 6 * 60)
+            print(f"[REPLY] No new tweet found, waiting {wait:.0f}s before second attempt...")
+            time.sleep(wait)
+            try:
+                print("[REPLY] Second and final attempt...")
+                president_reply.main()
+            except Exception as e:
+                print(f"[REPLY ERROR] Second attempt: {e}")
+
+            cache_final = president_reply.load_last_replied_id()
+            if cache_final != cache_before:
+                print("[REPLY] Successfully replied on second attempt")
+            else:
+                print("[REPLY] No new tweet found, done for today")
 
     # Check milestones first (immediate posting if detected)
     milestone_checker.check_and_tweet(now)
