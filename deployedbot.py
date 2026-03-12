@@ -9,6 +9,7 @@ import tweepy
 
 from countdown import end, remaining_time, start, timezone
 from milestones import MilestoneChecker
+import os
 
 # Global DRY_RUN flag - set to True to log tweets instead of posting to API
 DRY_RUN = True
@@ -35,8 +36,8 @@ client = tweepy.Client(
 
 # Function to calculate next tweet interval
 def nextTweetCalc():
-    # Random interval between 3 and 8 hours
-    periodicalTime = max(60 * 60 * 7, 60 * 60 * 13 * random())
+    # Random interval between 8 and 24 hours
+    periodicalTime = max(60 * 60 * 8, 60 * 60 * 24 * random())
     nextTweetTime = datetime.datetime.now(timezone) + timedelta(seconds=periodicalTime)
     nextTweetTimeStr = f"Next tweet in {round(periodicalTime/3600, 2)} hours, or at {nextTweetTime.strftime('%Y-%m-%d %H:%M:%S')} Mexico City time."
     print(nextTweetTimeStr)
