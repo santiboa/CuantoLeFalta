@@ -9,7 +9,7 @@ SEXENIO_START_ISO = "2024-10-01T00:00:00"
 TIMEZONE = "America/Mexico_City"
 
 # X/Twitter profile
-X_HANDLE = "CuantoLeFworst"
+X_HANDLE = "cuantolefalta"
 
 
 @app.route("/")
