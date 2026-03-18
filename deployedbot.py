@@ -37,8 +37,8 @@ def save_latest_tweet(tweet_id: str, tweet_text: str) -> None:
     with open(LATEST_TWEET_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# Global DRY_RUN flag - set to True to log tweets instead of posting to API
-DRY_RUN = True
+# Global DRY_RUN flag - set DRY_RUN=false in .env to actually post tweets
+DRY_RUN = os.getenv("DRY_RUN", "true").lower() != "false"
 
 #Important Keys (Make sure to secure your keys if this is production)
 consumer_key = os.getenv('CONSUMER_KEY')

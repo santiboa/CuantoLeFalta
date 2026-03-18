@@ -47,25 +47,36 @@ def _get_write_client() -> tweepy.Client:
     )
 
 
-def load_last_replied_id() -> Optional[str]:
-    """Load the last tweet ID we replied to from cache."""
+REPLIED_IDS_LIMIT = 3
+
+
+def load_replied_ids() -> list:
+    """Load the list of recently replied tweet IDs from cache."""
     if not CACHE_FILE.exists():
-        return None
+        return []
     try:
         with open(CACHE_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-            return data.get("last_tweet_id")
+            # Support old single-ID format
+            if "replied_ids" in data:
+                return data["replied_ids"]
+            legacy = data.get("last_tweet_id")
+            return [legacy] if legacy else []
     except (json.JSONDecodeError, IOError, KeyError) as e:
         print(f"[WARN] Could not load cache: {e}")
-        return None
+        return []
 
 
-def save_last_replied_id(tweet_id: str) -> None:
-    """Save the tweet ID we replied to."""
+def save_replied_id(tweet_id: str) -> None:
+    """Append tweet ID to the replied list, keeping the last REPLIED_IDS_LIMIT entries."""
+    replied_ids = load_replied_ids()
+    if tweet_id not in replied_ids:
+        replied_ids.append(tweet_id)
+    replied_ids = replied_ids[-REPLIED_IDS_LIMIT:]
     now = datetime.datetime.now(timezone)
     data = {
-        "last_tweet_id": tweet_id,
-        "replied_at": now.isoformat(),
+        "replied_ids": replied_ids,
+        "last_replied_at": now.isoformat(),
     }
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
@@ -127,8 +138,8 @@ def main() -> None:
         print("[SKIP] Could not fetch latest tweet ID")
         return
 
-    cached_id = load_last_replied_id()
-    if cached_id == latest_id:
+    replied_ids = load_replied_ids()
+    if latest_id in replied_ids:
         print(f"[SKIP] Already replied to {latest_id}")
         return
 
@@ -144,7 +155,7 @@ def main() -> None:
     write_client = _get_write_client()
     try:
         write_client.create_tweet(text=tweet_text, in_reply_to_tweet_id=latest_id)
-        save_last_replied_id(latest_id)
+        save_replied_id(latest_id)
         print(f"[SUCCESS] Replied to {latest_id}")
     except tweepy.TweepyException as e:
         print(f"[ERROR] Failed to reply: {e}")
