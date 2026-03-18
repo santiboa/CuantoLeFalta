@@ -20,20 +20,7 @@ class MilestoneChecker:
         self.start = start
         self.end = end
         self.timezone = timezone
-        # #region agent log
-        import json
-        import os
-        log_path = '/Users/santiagopadilla/Documents/CuantoLeFalta/.cursor/debug-bab3a6.log'
-        with open(log_path, 'a') as f:
-            f.write(json.dumps({"sessionId":"bab3a6","runId":"initial","hypothesisId":"C","location":"milestones.py:21","message":"MilestoneChecker.__init__","data":{"dry_run_param":dry_run,"local_DRY_RUN":globals().get('DRY_RUN', 'not_found')},"timestamp":int(__import__('time').time()*1000)}) + '\n')
-        # #endregion
         self.dry_run = dry_run
-        # #region agent log
-        import json
-        log_path = '/Users/santiagopadilla/Documents/CuantoLeFalta/.cursor/debug-bab3a6.log'
-        with open(log_path, 'a') as f:
-            f.write(json.dumps({"sessionId":"bab3a6","runId":"initial","hypothesisId":"C","location":"milestones.py:29","message":"self.dry_run set","data":{"self_dry_run":self.dry_run},"timestamp":int(__import__('time').time()*1000)}) + '\n')
-        # #endregion
         
         # Previous check values (for crossing detection)
         self.prev_remaining_seconds: Optional[float] = None
@@ -425,21 +412,8 @@ class MilestoneChecker:
                 print(f"[TWEET] {tweet_text}")
                 
                 # Tweet (unless dry-run)
-                # #region agent log
-                import json
-                import os
-                log_path = '/Users/santiagopadilla/Documents/CuantoLeFalta/.cursor/debug-bab3a6.log'
-                with open(log_path, 'a') as f:
-                    f.write(json.dumps({"sessionId":"bab3a6","runId":"initial","hypothesisId":"D","location":"milestones.py:418","message":"Before milestone tweet check","data":{"self_dry_run":self.dry_run,"tweet_length":len(tweet_text)},"timestamp":int(__import__('time').time()*1000)}) + '\n')
-                # #endregion
                 if self.dry_run:
                     print(f"[DRY RUN] TWEET: {tweet_text}")
-                    # #region agent log
-                    import json
-                    log_path = '/Users/santiagopadilla/Documents/CuantoLeFalta/.cursor/debug-bab3a6.log'
-                    with open(log_path, 'a') as f:
-                        f.write(json.dumps({"sessionId":"bab3a6","runId":"initial","hypothesisId":"D","location":"milestones.py:422","message":"Milestone DRY_RUN branch","data":{"branch":"dry_run"},"timestamp":int(__import__('time').time()*1000)}) + '\n')
-                    # #endregion
                 else:
                     try:
                         self.client.create_tweet(text=tweet_text)
