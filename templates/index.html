@@ -26,8 +26,23 @@
     <meta name="twitter:description" content="Cuenta regresiva en tiempo real para el fin del sexenio presidencial de México. Un reloj. Nada más.">
     <meta name="twitter:image" content="https://www.cuantolefalta.com/static/og-image.png">
 
-    <!-- Favicon -->
+    <!-- Favicon & Theme -->
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta property="og:site_name" content="Cuánto Le Falta">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Cuánto Le Falta",
+        "url": "https://www.cuantolefalta.com",
+        "description": "Cuenta regresiva en tiempo real para el fin del sexenio presidencial de México (1 de octubre de 2030).",
+        "inLanguage": "es-MX"
+    }
+    </script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -135,16 +150,22 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Cuánto Le Falta</h1>
+    <main class="container">
+        <header>
+            <h1>Cuánto Le Falta</h1>
+        </header>
 
-        <div class="countdown-days" id="days">--</div>
+        <div class="countdown-days" id="days" aria-live="polite">--</div>
         <div class="countdown-days"><span>días</span></div>
 
         <div class="countdown-detail" id="detail"></div>
         <div class="countdown-hms" id="hms"></div>
 
-        <div class="progress-bar">
+        <noscript>
+            <p class="countdown-detail">Cuenta regresiva al 1 de octubre de 2030. Activa JavaScript para ver el reloj en vivo.</p>
+        </noscript>
+
+        <div class="progress-bar" role="progressbar" aria-label="Progreso del sexenio">
             <div class="progress-fill" id="progress"></div>
         </div>
         <div class="progress-text" id="progress-text"></div>
@@ -169,8 +190,8 @@
             Seguir a @{{ x_handle }}
         </a>
 
-        <div class="footer">Un reloj. Nada más.</div>
-    </div>
+        <footer class="footer">Un reloj. Nada más.</footer>
+    </main>
 
     <script>
         const END = new Date("{{ end_iso }}");
