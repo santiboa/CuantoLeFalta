@@ -1,70 +1,50 @@
 """
-Reply to the president's latest tweet at 7:45 AM CDMX with the countdown.
-Uses Playwright to fetch the latest tweet ID (API read endpoints are paywalled).
-Posts the reply via Tweepy (posting is still free tier).
+Reply to the president's latest tweet with the countdown.
+Uses X API v2 (via Tweepy) to read the latest tweet and post a reply.
+Polls every 30 minutes; controlled by deployedbot.py's main loop.
 """
 import datetime
 import json
 import os
-import random
-from dotenv import load_dotenv
-
-load_dotenv()
-import re
-import time
 from pathlib import Path
 from typing import Optional
 
 import tweepy
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from countdown import remaining_time, timezone
 
 # --- Config ---
 PRESIDENT_X_HANDLE = "Claudiashein"
-PROFILE_URL = f"https://x.com/{PRESIDENT_X_HANDLE}"
 CACHE_FILE = Path(__file__).parent / "last_replied_id.json"
 DRY_RUN = True
 
-# Retry settings
-MAX_RETRIES = 4
-BASE_DELAY_SECONDS = 6.0
-
-# Startup jitter: wait 27–373 seconds before running (skipped in DRY_RUN)
-STARTUP_DELAY_MIN = 27
-STARTUP_DELAY_MAX = 373
-
-# Credentials (match deployedbot - consider moving to env vars)
+# Credentials
 CONSUMER_KEY = os.environ.get("CONSUMER_KEY")
 CONSUMER_SECRET = os.environ.get("CONSUMER_SECRET")
 ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
 ACCESS_TOKEN_SECRET = os.environ.get("ACCESS_TOKEN_SECRET")
+BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
 
-# Realistic user agent (Chrome on Windows, updated periodically)
-USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
-)
+# Cache the president's numeric user ID to avoid repeated lookups
+_president_user_id: Optional[str] = None
 
 
-def _human_delay(min_sec: float = 2.0, max_sec: float = 5.0) -> None:
-    """Random delay to mimic human behavior."""
-    time.sleep(random.uniform(min_sec, max_sec))
+def _get_read_client() -> tweepy.Client:
+    """Client for reading (uses Bearer Token, app-only auth)."""
+    return tweepy.Client(bearer_token=BEARER_TOKEN)
 
 
-def _retry_with_backoff(func, *args, **kwargs):
-    """Retry a function with exponential backoff."""
-    last_exc = None
-    for attempt in range(MAX_RETRIES):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            last_exc = e
-            if attempt == MAX_RETRIES - 1:
-                raise
-            delay = BASE_DELAY_SECONDS * (2**attempt) + random.uniform(0, 2)
-            print(f"[RETRY] Attempt {attempt + 1}/{MAX_RETRIES} failed: {e}. Waiting {delay:.1f}s...")
-            time.sleep(delay)
-    raise last_exc
+def _get_write_client() -> tweepy.Client:
+    """Client for writing (uses OAuth 1.0a user context)."""
+    return tweepy.Client(
+        consumer_key=CONSUMER_KEY,
+        consumer_secret=CONSUMER_SECRET,
+        access_token=ACCESS_TOKEN,
+        access_token_secret=ACCESS_TOKEN_SECRET,
+    )
 
 
 def load_last_replied_id() -> Optional[str]:
@@ -91,80 +71,61 @@ def save_last_replied_id(tweet_id: str) -> None:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-def get_latest_tweet_id() -> Optional[str]:
+def get_president_user_id(client: tweepy.Client) -> Optional[str]:
+    """Look up the president's numeric user ID by username. Cached after first call."""
+    global _president_user_id
+    if _president_user_id is not None:
+        return _president_user_id
+
+    response = client.get_user(username=PRESIDENT_X_HANDLE)
+    if response.data:
+        _president_user_id = str(response.data.id)
+        print(f"[OK] Resolved @{PRESIDENT_X_HANDLE} -> user ID {_president_user_id}")
+        return _president_user_id
+
+    print(f"[ERROR] Could not resolve @{PRESIDENT_X_HANDLE}")
+    return None
+
+
+def get_latest_tweet_id(client: tweepy.Client = None) -> Optional[str]:
     """
-    Use Playwright to load the president's profile and extract the latest tweet ID.
-    Uses natural flow (land on x.com first) and anti-detection measures.
+    Fetch the president's latest tweet via X API v2.
+    Returns the tweet ID, or None if unavailable.
     """
-    from playwright.sync_api import sync_playwright
-    from playwright_stealth import Stealth
+    if client is None:
+        client = _get_read_client()
 
-    def _scrape():
-        stealth = Stealth(navigator_languages_override=("es-MX", "es"))
-        with stealth.use_sync(sync_playwright()) as p:
-            # PythonAnywhere: set PLAYWRIGHT_CHROMIUM_PATH=/usr/bin/chromium
-            executable = os.environ.get("PLAYWRIGHT_CHROMIUM_PATH")
-            launch_kw: dict = {
-                "headless": True,
-                "args": ["--disable-gpu", "--no-sandbox", "--headless"],
-            }
-            if executable:
-                launch_kw["executable_path"] = executable
+    user_id = get_president_user_id(client)
+    if not user_id:
+        return None
 
-            browser = p.chromium.launch(**launch_kw)
+    response = client.get_users_tweets(
+        id=user_id,
+        max_results=5,
+        exclude=["retweets", "replies"],
+        tweet_fields=["created_at"],
+    )
 
-            context = browser.new_context(
-                user_agent=USER_AGENT,
-                viewport={"width": 1366, "height": 768},
-                locale="es-MX",
-            )
+    if response.data:
+        latest = response.data[0]
+        print(f"[OK] Latest tweet ID: {latest.id} (created: {latest.created_at})")
+        return str(latest.id)
 
-            page = context.new_page()
-            # Stealth is applied automatically to pages via use_sync
-
-            # Natural flow: land on x.com first, then navigate to profile
-            page.goto("https://x.com", wait_until="domcontentloaded", timeout=30000)
-            _human_delay(2.5, 5.0)
-
-            page.goto(PROFILE_URL, wait_until="domcontentloaded", timeout=30000)
-            _human_delay(2.0, 4.0)
-
-            # Light scroll to trigger lazy load and mimic human
-            page.evaluate("window.scrollBy(0, 200)")
-            _human_delay(1.0, 2.5)
-
-            # Extract tweet ID from links matching /handle/status/ID (stable URL pattern)
-            pattern = re.compile(rf"/{PRESIDENT_X_HANDLE}/status/(\d+)")
-            links = page.locator('a[href*="/status/"]').all()
-            for link in links:
-                href = link.get_attribute("href") or ""
-                m = pattern.search(href)
-                if m:
-                    browser.close()
-                    return m.group(1)
-
-            browser.close()
-            return None
-
-    return _retry_with_backoff(_scrape)
+    print("[WARN] No tweets found for user")
+    return None
 
 
 def main() -> None:
     """Main entry: get latest tweet, reply if new, cache ID."""
     now = datetime.datetime.now(timezone)
-    print(f"[{now.isoformat()}] President reply job started (DRY_RUN={DRY_RUN})")
+    print(f"[{now.isoformat()}] President reply check (DRY_RUN={DRY_RUN})")
 
-    if not DRY_RUN:
-        delay = random.uniform(STARTUP_DELAY_MIN, STARTUP_DELAY_MAX)
-        print(f"[JITTER] Waiting {delay:.1f}s before running...")
-        time.sleep(delay)
+    read_client = _get_read_client()
 
-    latest_id = get_latest_tweet_id()
+    latest_id = get_latest_tweet_id(read_client)
     if not latest_id:
         print("[SKIP] Could not fetch latest tweet ID")
         return
-
-    print(f"[OK] Latest tweet ID: {latest_id}")
 
     cached_id = load_last_replied_id()
     if cached_id == latest_id:
@@ -180,15 +141,9 @@ def main() -> None:
         print(f"[DRY RUN] Would reply to {latest_id}: {tweet_text[:80]}...")
         return
 
-    client = tweepy.Client(
-        consumer_key=CONSUMER_KEY,
-        consumer_secret=CONSUMER_SECRET,
-        access_token=ACCESS_TOKEN,
-        access_token_secret=ACCESS_TOKEN_SECRET,
-    )
-
+    write_client = _get_write_client()
     try:
-        client.create_tweet(text=tweet_text, in_reply_to_tweet_id=latest_id)
+        write_client.create_tweet(text=tweet_text, in_reply_to_tweet_id=latest_id)
         save_last_replied_id(latest_id)
         print(f"[SUCCESS] Replied to {latest_id}")
     except tweepy.TweepyException as e:

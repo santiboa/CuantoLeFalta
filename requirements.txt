@@ -8,6 +8,5 @@ python-dotenv>=1.0.0
 pytest>=7.0.0
 freezegun>=1.2.0
 
-# President reply scraper (run at 7:45 AM CDMX)
-playwright>=1.40.0
-playwright-stealth>=2.0.0
+# President reply uses X API v2 via Tweepy (Bearer Token for reads)
+# No additional deps — tweepy already handles both read and write

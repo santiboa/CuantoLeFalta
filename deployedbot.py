@@ -20,24 +20,10 @@ import random as random_module
 
 LATEST_TWEET_FILE = Path(__file__).parent / "latest_tweet.json"
 
-# President reply: window for picking a random first-attempt time
-REPLY_WINDOW_START = datetime.time(7, 39, 11)
-REPLY_WINDOW_END = datetime.time(7, 51, 48)
-
-
-def pick_reply_time_for_today() -> datetime.datetime:
-    """Pick a random time within today's reply window (CDMX timezone)."""
-    now = datetime.datetime.now(timezone)
-    window_start = now.replace(
-        hour=REPLY_WINDOW_START.hour, minute=REPLY_WINDOW_START.minute,
-        second=REPLY_WINDOW_START.second, microsecond=0
-    )
-    window_end = now.replace(
-        hour=REPLY_WINDOW_END.hour, minute=REPLY_WINDOW_END.minute,
-        second=REPLY_WINDOW_END.second, microsecond=0
-    )
-    random_offset = random_module.uniform(0, (window_end - window_start).total_seconds())
-    return window_start + timedelta(seconds=random_offset)
+# President reply: poll every 30 minutes between 7 AM and 10 PM CDMX
+REPLY_POLL_INTERVAL_MINUTES = 30
+REPLY_HOUR_START = 7
+REPLY_HOUR_END = 22  # 10 PM
 
 
 
@@ -95,11 +81,9 @@ nextTweetTime = datetime.datetime.now(timezone) + timedelta(seconds=nextTweetCal
 # Initialize milestone checker
 milestone_checker = MilestoneChecker(client, start, end, timezone, dry_run=DRY_RUN)
 
-# President reply: pick today's random reply time
-reply_time_today = pick_reply_time_for_today()
-reply_done_today = False
-reply_last_date = None
-print(f"[REPLY] Today's president reply scheduled for {reply_time_today.strftime('%H:%M:%S')} CDMX")
+# President reply: track last poll time
+last_reply_poll = None
+print(f"[REPLY] Polling every {REPLY_POLL_INTERVAL_MINUTES} min between {REPLY_HOUR_START}:00-{REPLY_HOUR_END}:00 CDMX")
 
 while True:
     time.sleep(60)  # Wait 1 minute
@@ -107,47 +91,19 @@ while True:
     # Check if the current time is after the next tweet time
     now = datetime.datetime.now(timezone)
 
-    # Reset reply state at midnight for a new day
-    today = now.date()
-    if reply_last_date != today:
-        reply_done_today = False
-        reply_time_today = pick_reply_time_for_today()
-        reply_last_date = today
-        print(f"[REPLY] New day — president reply scheduled for {reply_time_today.strftime('%H:%M:%S')} CDMX")
+    # President reply: poll every 30 minutes during active hours
+    in_reply_window = REPLY_HOUR_START <= now.hour < REPLY_HOUR_END
+    minutes_since_last_poll = (
+        (now - last_reply_poll).total_seconds() / 60 if last_reply_poll else float("inf")
+    )
 
-    # President reply: try once at the random time, if no new tweet wait
-    # 4-6 minutes and try one last time, then done for the day.
-    if not reply_done_today and now >= reply_time_today:
+    if in_reply_window and minutes_since_last_poll >= REPLY_POLL_INTERVAL_MINUTES:
         president_reply.DRY_RUN = DRY_RUN
-        president_reply.STARTUP_DELAY_MIN = 0
-        president_reply.STARTUP_DELAY_MAX = 0
-        reply_done_today = True
-
-        cache_before = president_reply.load_last_replied_id()
+        last_reply_poll = now
         try:
-            print("[REPLY] First attempt...")
             president_reply.main()
         except Exception as e:
-            print(f"[REPLY ERROR] First attempt: {e}")
-
-        cache_after = president_reply.load_last_replied_id()
-        if cache_after != cache_before:
-            print("[REPLY] Successfully replied on first attempt")
-        else:
-            wait = random_module.uniform(4 * 60, 6 * 60)
-            print(f"[REPLY] No new tweet found, waiting {wait:.0f}s before second attempt...")
-            time.sleep(wait)
-            try:
-                print("[REPLY] Second and final attempt...")
-                president_reply.main()
-            except Exception as e:
-                print(f"[REPLY ERROR] Second attempt: {e}")
-
-            cache_final = president_reply.load_last_replied_id()
-            if cache_final != cache_before:
-                print("[REPLY] Successfully replied on second attempt")
-            else:
-                print("[REPLY] No new tweet found, done for today")
+            print(f"[REPLY ERROR] {e}")
 
     # Check milestones first (immediate posting if detected)
     milestone_checker.check_and_tweet(now)
