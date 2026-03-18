@@ -2,6 +2,7 @@
 #!/usr/local/python3.7
 # Replies to mentions, AMLO's latest tweets, and posts periodically 
 # Import Tweety and date / times
+import os
 import tweepy
 import datetime
 from datetime import timedelta
@@ -11,11 +12,11 @@ from random import random
 import pytz
 from calendar import monthrange
 
-#Important Keys
-consumer_key = 'fNP3wN6zG2W4PiGETsaFU7Bwi'
-consumer_secret = 'Tz1HjLXiXdb5Gn9uP2IXocrbLut4fHCOF5EhR1vUOvnHOzvP8F'
-access_token = '1338193765656264704-FmIfbY97zBxyY0qaNxecI9MmCJUsUv'
-access_token_secret = '4UK79svSne8789YiXwwrXGnX2FaC2OeuEeZvIJxyrT3RY'
+#Important Keys — use environment variables, never hardcode
+consumer_key = os.environ.get('CONSUMER_KEY')
+consumer_secret = os.environ.get('CONSUMER_SECRET')
+access_token = os.environ.get('ACCESS_TOKEN')
+access_token_secret = os.environ.get('ACCESS_TOKEN_SECRET')
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
