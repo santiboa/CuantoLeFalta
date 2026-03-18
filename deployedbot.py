@@ -8,6 +8,9 @@ from pathlib import Path
 from random import random
 
 import tweepy
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from countdown import end, remaining_time, start, timezone
 from milestones import MilestoneChecker

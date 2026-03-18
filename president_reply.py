@@ -7,6 +7,9 @@ import datetime
 import json
 import os
 import random
+from dotenv import load_dotenv
+
+load_dotenv()
 import re
 import time
 from pathlib import Path
