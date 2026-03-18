@@ -7,8 +7,8 @@ from flask import Flask, render_template
 app = Flask(__name__)
 
 # Sexenio dates (must match countdown.py)
-SEXENIO_END_ISO = "2030-10-01T00:00:00"
-SEXENIO_START_ISO = "2024-10-01T00:00:00"
+SEXENIO_END_ISO = "2030-10-01T00:00:00-06:00"
+SEXENIO_START_ISO = "2024-10-01T00:00:00-06:00"
 TIMEZONE = "America/Mexico_City"
 
 # X/Twitter profile
