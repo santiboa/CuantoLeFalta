@@ -79,14 +79,9 @@ def nextTweetCalc():
 # Initialize tweet cycle
 periodicalTime = nextTweetCalc()
 
-#Sample DEBUG:
+# Show what the next tweet will look like (never post on startup)
 tweet = remaining_time()
-if DRY_RUN:
-    print(f'[DRY RUN] TWEET: {tweet}')
-else:
-    response = client.create_tweet(text=tweet)
-    save_latest_tweet(response.data["id"], tweet)
-print(f'Sample tweet right now at start of this:{tweet}')
+print(f'[STARTUP] Next tweet will be: {tweet}')
 
 # Initialize next tweet time
 nextTweetTime = datetime.datetime.now(timezone) + timedelta(seconds=nextTweetCalc())
