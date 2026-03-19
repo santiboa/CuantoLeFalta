@@ -20,7 +20,8 @@ import random as random_module
 
 LATEST_TWEET_FILE = Path(__file__).parent / "latest_tweet.json"
 
-# President reply: poll every 30 minutes between 7 AM and 10 PM CDMX
+# President reply: set REPLIES=on in .env to enable
+REPLIES_ENABLED = os.getenv("REPLIES", "off").lower() == "on"
 REPLY_POLL_INTERVAL_MINUTES = 30
 REPLY_HOUR_START = 7
 REPLY_HOUR_END = 22  # 10 PM
@@ -95,7 +96,10 @@ milestone_checker = MilestoneChecker(client, start, end, timezone, dry_run=DRY_R
 
 # President reply: track last poll time
 last_reply_poll = None
-print(f"[REPLY] Polling every {REPLY_POLL_INTERVAL_MINUTES} min between {REPLY_HOUR_START}:00-{REPLY_HOUR_END}:00 CDMX")
+if REPLIES_ENABLED:
+    print(f"[REPLY] Polling every {REPLY_POLL_INTERVAL_MINUTES} min between {REPLY_HOUR_START}:00-{REPLY_HOUR_END}:00 CDMX")
+else:
+    print("[REPLY] Disabled (set REPLIES=on in .env to enable)")
 
 while True:
     time.sleep(60)  # Wait 1 minute
@@ -109,7 +113,7 @@ while True:
         (now - last_reply_poll).total_seconds() / 60 if last_reply_poll else float("inf")
     )
 
-    if in_reply_window and minutes_since_last_poll >= REPLY_POLL_INTERVAL_MINUTES:
+    if REPLIES_ENABLED and in_reply_window and minutes_since_last_poll >= REPLY_POLL_INTERVAL_MINUTES:
         president_reply.DRY_RUN = DRY_RUN
         last_reply_poll = now
         try:
