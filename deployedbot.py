@@ -54,11 +54,23 @@ client = tweepy.Client(
 )
 
 
-# Function to calculate next tweet interval
+# Tweet timing: random interval between 24 and 36 hours, avoiding midnight-6AM CDMX
+QUIET_HOUR_START = 2   # 2 AM
+QUIET_HOUR_END = 7     # 7 AM
+QUIET_RANDOM_OFFSET_MIN = 60  # max minutes of random offset after quiet hours end
+
+
 def nextTweetCalc():
-    # Random interval between 8 and 24 hours
-    periodicalTime = max(60 * 60 * 8, 60 * 60 * 24 * random())
+    # Random interval between 24 and 36 hours
+    periodicalTime = 60 * 60 * (24 + 12 * random())
     nextTweetTime = datetime.datetime.now(timezone) + timedelta(seconds=periodicalTime)
+
+    # If it lands in quiet hours (midnight-6AM), push to 6AM + random offset
+    if QUIET_HOUR_START <= nextTweetTime.hour < QUIET_HOUR_END:
+        nextTweetTime = nextTweetTime.replace(hour=QUIET_HOUR_END, minute=0, second=0)
+        nextTweetTime += timedelta(minutes=random_module.randint(0, QUIET_RANDOM_OFFSET_MIN))
+        periodicalTime = (nextTweetTime - datetime.datetime.now(timezone)).total_seconds()
+
     nextTweetTimeStr = f"Next tweet in {round(periodicalTime/3600, 2)} hours, or at {nextTweetTime.strftime('%Y-%m-%d %H:%M:%S')} Mexico City time."
     print(nextTweetTimeStr)
     return periodicalTime

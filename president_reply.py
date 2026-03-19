@@ -1,6 +1,6 @@
 """
-Reply to the president's latest tweet with the countdown.
-Uses X API v2 (via Tweepy) to read the latest tweet and post a reply.
+Quote-tweet the president's latest tweet with the countdown.
+Uses X API v2 (via Tweepy) to read the latest tweet and post a quote tweet.
 Polls every 30 minutes; controlled by deployedbot.py's main loop.
 """
 import datetime
@@ -127,7 +127,7 @@ def get_latest_tweet_id(client: tweepy.Client = None) -> Optional[str]:
 
 
 def main() -> None:
-    """Main entry: get latest tweet, reply if new, cache ID."""
+    """Main entry: get latest tweet, quote-tweet if new, cache ID."""
     now = datetime.datetime.now(timezone)
     print(f"[{now.isoformat()}] President reply check (DRY_RUN={DRY_RUN})")
 
@@ -149,14 +149,14 @@ def main() -> None:
         return
 
     if DRY_RUN:
-        print(f"[DRY RUN] Would reply to {latest_id}: {tweet_text[:80]}...")
+        print(f"[DRY RUN] Would quote tweet {latest_id}: {tweet_text[:80]}...")
         return
 
     write_client = _get_write_client()
     try:
-        write_client.create_tweet(text=tweet_text, in_reply_to_tweet_id=latest_id)
+        write_client.create_tweet(text=tweet_text, quote_tweet_id=latest_id)
         save_replied_id(latest_id)
-        print(f"[SUCCESS] Replied to {latest_id}")
+        print(f"[SUCCESS] Quoted tweet {latest_id}")
     except tweepy.TweepyException as e:
         print(f"[ERROR] Failed to reply: {e}")
         raise
